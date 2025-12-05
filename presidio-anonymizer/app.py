@@ -11,6 +11,7 @@ from presidio_anonymizer.entities import InvalidParamError
 from presidio_anonymizer.services.app_entities_convertor import AppEntitiesConvertor
 from werkzeug.exceptions import BadRequest, HTTPException
 
+
 DEFAULT_PORT = "3000"
 
 LOGGING_CONF_FILE = "logging.ini"
@@ -36,7 +37,6 @@ class Server:
         self.logger.setLevel(os.environ.get("LOG_LEVEL", self.logger.level))
         self.app = Flask(__name__)
         self.logger.info("Starting anonymizer engine")
-        self.anonymizer = AnonymizerEngine()
         self.deanonymize = DeanonymizeEngine()
         self.logger.info(WELCOME_MESSAGE)
 
@@ -103,8 +103,31 @@ class Server:
                 "description": "Example output of the genz anonymizer."
             }
             return jsonify(response)
+        @self.app.route("/genz", methods=["POST"])
+        def genz():
+            """Apply the Gen-Z anonymizer to the given text and analyzer results."""
 
+            content = request.get_json()
+            if not content:
+                raise BadRequest("Invalid request json")
 
+            text = content.get("text", "")
+            analyzer_results = AppEntitiesConvertor.analyzer_results_from_json(
+                content.get("analyzer_results")
+            )
+            # Build operator config forcing all entities → genz
+            genz_operator = {"type": "genz"}
+            operators = {}
+            for ent in analyzer_results:
+                operators.setdefault(ent.entity_type, genz_operator)
+            # Run anonymizer
+            result = self.anonymizer.anonymize(
+                text=text,
+                analyzer_results=analyzer_results,
+                operators=operators,
+            )
+            # Return JSON (presidio already formats correctly)
+            return Response(result.to_json(), mimetype="application/json")
         @self.app.errorhandler(InvalidParamError)
         def invalid_param(err):
             self.logger.warning(
