@@ -401,3 +401,71 @@ def test_overlapping_keep_both():
 
     assert response_status == 200
     assert equal_json_strings(expected_response, response_content)
+    @pytest.mark.api
+    def test_given_anonymize_called_with_genz_then_expected_valid_response_returned():
+        request_body = """
+    {
+        "text": "Please contact Emily Carter at 734-555-9284 if you have questions about the workshop registration.",
+        "analyzer_results": [
+            {
+                "start": 15,
+                "end": 27,
+                "score": 0.3,
+                "entity_type": "PERSON"
+            },
+            {
+                "start": 31,
+                "end": 43,
+                "score": 0.95,
+                "entity_type": "PHONE_NUMBER"
+            }
+        ]
+    }
+    """
+
+    # Call the anonymize function (make sure your methods.py supports genz)
+    response_status, response_content = anonymize(request_body)
+
+    # Since genz anonymizer is random, just check that status is 200 and text exists
+    assert response_status == 200
+
+    response_json = json.loads(response_content)
+    assert "text" in response_json
+    assert "items" in response_json
+    assert len(response_json["items"]) == 2
+
+    # Check that returned items have expected entity types
+    entity_types = {item["entity_type"] for item in response_json["items"]}
+    assert "PERSON" in entity_types
+    assert "PHONE_NUMBER" in entity_types
+    
+@pytest.mark.api
+def test_given_anonymize_called_with_genz_then_expected_valid_response_returned():
+    request_body = """
+    {
+        "text": "Please contact Emily Carter at 734-555-9284 if you have questions about the workshop registration.",
+        "analyzer_results": [
+            {
+                "start": 15,
+                "end": 27,
+                "score": 0.3,
+                "entity_type": "PERSON"
+            },
+            {
+                "start": 31,
+                "end": 43,
+                "score": 0.95,
+                "entity_type": "PHONE_NUMBER"
+            }
+        ]
+    }
+    """
+    # Call the Gen-Z endpoint
+    response_status, response_content = anonymize(request_body, endpoint="/genz")
+
+    # Random output → cannot check exact text, just assert status and JSON structure
+    assert response_status == 200
+    json_response = json.loads(response_content)
+    assert "text" in json_response
+    assert "items" in json_response
+    assert all("operator" in item and item["operator"] == "genz" for item in json_response["items"])
