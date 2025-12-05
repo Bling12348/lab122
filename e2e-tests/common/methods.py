@@ -48,3 +48,20 @@ def __get_multipart_form_data(file):
             "image": (file.name, file, "multipart/form-data"),
         }
     return multipart_form_data
+
+def anonymize(data, endpoint="/anonymize"):
+    """
+    Sends a POST request to the anonymizer service.
+
+    Parameters:
+        data: str - JSON string of the request body
+        endpoint: str - endpoint to call (default '/anonymize')
+
+    Returns:
+        Tuple[int, bytes] - (status_code, response.content)
+    """
+    response = requests.post(
+        f"{ANONYMIZER_BASE_URL}{endpoint}", data=data, headers=DEFAULT_HEADERS
+    )
+    return response.status_code, response.content
+
