@@ -5,15 +5,12 @@ import os
 from logging.config import fileConfig
 from pathlib import Path
 from flask import Flask, Response, jsonify, request
-from presidio_anonymizer import AnonymizerEngine, DeanonymizeEngine
+from presidio_anonymizer import DeanonymizeEngine
 from presidio_anonymizer.entities import InvalidParamError
 from presidio_anonymizer.services.app_entities_convertor import AppEntitiesConvertor
 from werkzeug.exceptions import BadRequest, HTTPException
-
 DEFAULT_PORT = "3000"
-
 LOGGING_CONF_FILE = "logging.ini"
-
 WELCOME_MESSAGE = r"""
  _______  _______  _______  _______ _________ ______  _________ _______
 (  ____ )(  ____ )(  ____ \(  ____ \\__   __/(  __  \ \__   __/(  ___  )
